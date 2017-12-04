@@ -10,13 +10,13 @@ import (
 )
 
 func TestAppRead(t *testing.T) {
-	conf, _ := NewConf("", "myuser", "somehost", 0, false, "")
+	conf, _ := NewConf()
 
 	check := func(input string, expected []string) {
 		timeout := time.NewTimer(time.Second)
 		r := strings.NewReader(input)
 		w := new(bytes.Buffer)
-		app := NewApp(conf, r, w)
+		app, _ := NewApp(conf, r, w)
 		go app.read()
 		actual := []string{}
 		stopped := false

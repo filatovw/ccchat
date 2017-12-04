@@ -12,17 +12,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-func NewApp(conf *ClientConf, in io.Reader, out io.Writer) *App {
+func NewApp(conf *Conf, in io.Reader, out io.Writer) (*App, error) {
 	return &App{
 		conf: conf,
 		in:   in,
 		out:  out,
 		hub:  NewHub(conf.User),
-	}
+	}, nil
 }
 
 type App struct {
-	conf   *ClientConf
+	conf   *Conf
 	socket *websocket.Conn
 	in     io.Reader
 	out    io.Writer
