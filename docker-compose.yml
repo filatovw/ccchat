@@ -1,0 +1,42 @@
+version: '3.2'
+services:
+  server:
+    image: alpine:latest
+    depends_on:
+      - db
+    volumes:
+      - ./bin/server:/app
+    command: /app -host=0.0.0.0:9000 -db-host=db:5432 -db-pass=passwd
+
+  client1:
+    image: alpine:latest
+    depends_on:
+      - server
+    volumes:
+      - ./bin/client:/app
+      - ./configs:/conf
+    command: /app -host=ws://server:9000 -user=client1
+
+  client2:
+    image: alpine:latest
+    depends_on:
+      - server
+    volumes:
+      - ./bin/client:/app
+      - ./configs:/conf
+    command: /app -host=ws://server:9000 -user=client2
+  
+  db:
+    image: postgres:10.1
+    environment:
+      POSTGRES_PASSWORD: dbpasswd
+      POSTGRES_USER: dbuser
+      POSTGRES_DB: ccchat
+
+  adminer:
+    image: adminer
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - 8080:8080

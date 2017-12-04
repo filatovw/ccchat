@@ -7,25 +7,31 @@ import (
 
 var serverConf = &ServerConf{}
 
-func init() {
-	flag.StringVar(&serverConf.Host, "host", "", "server host")
-	flag.IntVar(&serverConf.Concurrency, "concurrency", 0, "pool size")
-	flag.Parse()
+type ServerConf struct {
+	Host   string `json:"host"`
+	DBHost string `json:"dbhost"`
+	DBPass string `json:"dbpass"`
 }
 
-type ServerConf struct {
-	Host        string `json:"host"`
-	Concurrency int    `json:"concurrency"`
+func init() {
+	flag.StringVar(&serverConf.Host, "host", "", "server host")
+	flag.StringVar(&serverConf.DBHost, "dbhost", "", "db server host")
+	flag.StringVar(&serverConf.DBPass, "dbpass", "", "db server pass")
+	flag.Parse()
 }
 
 func NewServerConf() *ServerConf {
 	conf := &ServerConf{}
-	if serverConf.Host == "" {
-		conf.Host = "0.0.0.0:9000"
-	}
+	conf.Host = "0.0.0.0:9000"
 
-	if serverConf.Concurrency <= 0 {
-		conf.Concurrency = 100
+	if serverConf.Host != "" {
+		conf.Host = serverConf.Host
+	}
+	if serverConf.DBHost != "" {
+		conf.DBHost = serverConf.DBHost
+	}
+	if serverConf.DBPass != "" {
+		conf.DBPass = serverConf.DBPass
 	}
 	log.Printf(`new server config: %+v`, conf)
 	return conf

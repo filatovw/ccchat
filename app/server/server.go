@@ -1,11 +1,11 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 )
 
 var upgrader = websocket.Upgrader{
@@ -26,7 +26,7 @@ func (a *App) Run() error {
 	mux.HandleFunc("/", a.RootHandler)
 	mux.HandleFunc("/ws", a.WSHandler)
 	if err := http.ListenAndServe(a.conf.Host, mux); err != nil {
-		return fmt.Errorf(`server failed to serve: %s`, err)
+		return errors.Wrap(err, `server failed to start`)
 	}
 	return nil
 }

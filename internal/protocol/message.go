@@ -7,48 +7,72 @@ import (
 )
 
 const (
-	MESSAGE_AUTH = iota
-	MESSAGE_CHAT
-	MESSAGE_END
-
 	DELIMITER  = "::"
 	NEWLINE    = "\r\n"
 	TOKEN_AUTH = "auth"
 	TOKEN_END  = "end"
 )
 
-type Message struct {
-	t           int
+func marshal(command, message string) []byte {
+	s := strings.Join([]string{command, message}, DELIMITER) + NEWLINE
+	return []byte(s)
+}
+
+type Messager interface {
+	Marshal() []byte
+}
+
+type AuthMessage struct {
 	commandCode string
 	message     string
 }
 
-func (m *Message) Marshal() []byte {
-	s := strings.Join([]string{m.commandCode, m.message}, DELIMITER) + NEWLINE
-	return []byte(s)
+func (m AuthMessage) Name() string {
+	return m.message
+}
+
+func (m AuthMessage) Marshal() []byte {
+	return marshal(m.commandCode, m.message)
 }
 
 // NewAuthMessage returns message that should be first in session
-func NewAuthMessage(user string) (*Message, error) {
+func NewAuthMessage(user string) (Messager, error) {
 	user = strings.TrimSpace(user)
 	if len(user) == 0 {
 		return nil, errors.New("user name can not be empty")
 	}
-	return &Message{t: MESSAGE_AUTH, commandCode: TOKEN_AUTH, message: user}, nil
+	return &AuthMessage{commandCode: TOKEN_AUTH, message: user}, nil
 }
 
-// NewChatMessage returns user message
-func NewChatMessage(key, body string) (*Message, error) {
-	return &Message{t: MESSAGE_CHAT, commandCode: key, message: body}, nil
+type UserMessage struct {
+	commandCode string
+	message     string
+}
+
+func (m UserMessage) Marshal() []byte {
+	return marshal(m.commandCode, m.message)
+}
+
+// NewUserMessage returns user message
+func NewUserMessage(key, body string) (Messager, error) {
+	return &UserMessage{commandCode: key, message: body}, nil
+}
+
+type EndMessage struct {
+	commandCode string
+}
+
+func (m EndMessage) Marshal() []byte {
+	return []byte(m.commandCode)
 }
 
 // NewEndMessage returns message that should be latest in session
-func NewEndMEssage() (*Message, error) {
-	return &Message{t: MESSAGE_END, commandCode: TOKEN_END, message: ""}, nil
+func NewEndMEssage() (Messager, error) {
+	return &EndMessage{TOKEN_END}, nil
 }
 
 // ParseMessage recognizes message
-func ParseMessage(data []byte) (*Message, error) {
+func ParseMessage(data []byte) (Messager, error) {
 	inp := string(data)
 	inp = strings.TrimSpace(inp)
 	s := strings.Split(inp, DELIMITER)
@@ -61,19 +85,7 @@ func ParseMessage(data []byte) (*Message, error) {
 		if s[0] == TOKEN_AUTH {
 			return NewAuthMessage(s[1])
 		}
-		return NewChatMessage(s[0], s[1])
+		return NewUserMessage(s[0], s[1])
 	}
 	return nil, fmt.Errorf(`failed to parse message: %s`, inp)
-}
-
-func IsUserMessage(m *Message) bool {
-	return m.t == MESSAGE_CHAT
-}
-
-func IsAuthMessage(m *Message) bool {
-	return m.t == MESSAGE_AUTH
-}
-
-func IsEndMessage(m *Message) bool {
-	return m.t == MESSAGE_END
 }

@@ -35,14 +35,10 @@ func (hub *Hub) run() {
 	}
 }
 
-func (hub *Hub) send(msg *protocol.Message, client *Client) {
-	client.outbound <- msg.Marshal()
-}
-
-func (hub *Hub) broadcast(msg *protocol.Message, ignore *Client) {
+func (hub *Hub) broadcast(msg protocol.Messager, ignore *Client) {
 	for _, c := range hub.clients.data {
 		if c.id != ignore.id {
-			hub.send(msg, c)
+			c.outbound <- msg.Marshal()
 		}
 	}
 }
@@ -50,7 +46,6 @@ func (hub *Hub) broadcast(msg *protocol.Message, ignore *Client) {
 func (hub *Hub) onConnect(c *Client) {
 	hub.clients.Add(c)
 	log.Println("client connected: ", c.socket.RemoteAddr())
-
 }
 
 func (hub *Hub) onDisconnect(c *Client) {
@@ -64,14 +59,12 @@ func (hub *Hub) onMessage(data []byte, c *Client) {
 	if err != nil {
 		log.Printf(`failed to parse message: %v`, msg)
 	}
-	log.Printf(`%s: %s`, c.id, string(msg.Marshal()))
-	if protocol.IsAuthMessage(msg) {
-		c.active = true
-	} else if protocol.IsUserMessage(msg) && c.active {
-		hub.broadcast(msg, c)
-	} else if protocol.IsEndMessage(msg) && c.active {
-		c.active = false
-	} else {
-		log.Printf(`unknown type of incoming message: %v`, msg)
+	log.Printf(`%s: %s`, c.name, string(msg.Marshal()))
+	hub.broadcast(msg, c)
+	if m, ok := msg.(*protocol.AuthMessage); ok {
+		c.name = m.Name()
+		hub.clients.Add(c)
+	} else if _, ok := msg.(*protocol.EndMessage); ok {
+		hub.unregister <- c
 	}
 }

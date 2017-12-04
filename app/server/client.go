@@ -7,16 +7,20 @@ import (
 
 type Client struct {
 	id       string
-	active   bool
+	name     string
 	socket   *websocket.Conn
 	hub      *Hub
 	outbound chan []byte
 }
 
+func (client *Client) setName(name string) {
+	client.name = name
+}
+
 func newClient(hub *Hub, socket *websocket.Conn) *Client {
 	return &Client{
 		id:       uuid.NewV4().String(),
-		active:   false,
+		name:     "anonymous",
 		socket:   socket,
 		hub:      hub,
 		outbound: make(chan []byte),
@@ -24,9 +28,6 @@ func newClient(hub *Hub, socket *websocket.Conn) *Client {
 }
 
 func (client *Client) read() {
-	defer func() {
-		client.hub.unregister <- client
-	}()
 	for {
 		_, data, err := client.socket.ReadMessage()
 		if err != nil {
@@ -42,6 +43,7 @@ func (client *Client) write() {
 		case data, ok := <-client.outbound:
 			if !ok {
 				client.socket.WriteMessage(websocket.CloseMessage, []byte{})
+				client.socket.Close()
 				return
 			}
 			client.socket.WriteMessage(websocket.TextMessage, data)
@@ -55,6 +57,5 @@ func (client Client) run() {
 }
 
 func (client Client) close() {
-	client.socket.Close()
 	close(client.outbound)
 }

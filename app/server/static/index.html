@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <script type="text/javascript">
+            function wsinit(){
+                var ws = new WebSocket("ws://0.0.0.0:9090/ws");
+                var stream = document.getElementById("message-stream")
+                ws.onopen = function(e) {
+                    console.log("connection opened")
+                    // ws.send("hello server")
+                    // TODO: get stat data and init chat interface
+                }
+                ws.onmessage = function (e) {
+                    console.log(e)
+                    stream.value = stream.value + "\n" + e.data
+                };
+                ws.onerror = function() {
+                    console.log("failed to connect over websocket")
+                }
+                ws.onclose = function(e){
+                    if (e.wasClean) {
+                        console.log("closed correctly")
+                      } else {
+                        console.log("broken connection")
+                      }
+                      console.log("code: "+ e.code + " reason: " + e.reason)
+                };
+            }
+        </script>
+        <title>
+            hello, motherfucker
+        </title>
+    </head>
+    <body>
+        <h1>welcome to c-c-chat for stutterers</h1>
+        <button onclick="javascript:wsinit()">start</button>
+        <textarea id="message-stream">welcome to chat</textarea>
+    </body>
+</html>
