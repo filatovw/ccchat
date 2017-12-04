@@ -5,33 +5,33 @@ import (
 	"log"
 )
 
-var serverConf = &ServerConf{}
+var cliConf = &Conf{}
 
-type ServerConf struct {
+type Conf struct {
 	Host   string `json:"host"`
 	DBHost string `json:"dbhost"`
 	DBPass string `json:"dbpass"`
 }
 
 func init() {
-	flag.StringVar(&serverConf.Host, "host", "", "server host")
-	flag.StringVar(&serverConf.DBHost, "dbhost", "", "db server host")
-	flag.StringVar(&serverConf.DBPass, "dbpass", "", "db server pass")
+	flag.StringVar(&cliConf.Host, "host", "", "server host")
+	flag.StringVar(&cliConf.DBHost, "dbhost", "", "db server host")
+	flag.StringVar(&cliConf.DBPass, "dbpass", "", "db server pass")
 	flag.Parse()
 }
 
-func NewServerConf() *ServerConf {
-	conf := &ServerConf{}
+func NewConf() *Conf {
+	conf := &Conf{}
 	conf.Host = "0.0.0.0:9000"
 
-	if serverConf.Host != "" {
-		conf.Host = serverConf.Host
+	if cliConf.Host != "" {
+		conf.Host = cliConf.Host
 	}
-	if serverConf.DBHost != "" {
-		conf.DBHost = serverConf.DBHost
+	if cliConf.DBHost != "" {
+		conf.DBHost = cliConf.DBHost
 	}
-	if serverConf.DBPass != "" {
-		conf.DBPass = serverConf.DBPass
+	if cliConf.DBPass != "" {
+		conf.DBPass = cliConf.DBPass
 	}
 	log.Printf(`new server config: %+v`, conf)
 	return conf

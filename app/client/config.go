@@ -33,9 +33,13 @@ func init() {
 
 // Conf is a structured client config
 type Conf struct {
-	User    string   `json:"user"`
-	Host    string   `json:"host"`
-	GenConf *GenConf `json:"gen,omitempty"`
+	User    string  `json:"user"`
+	Host    string  `json:"host"`
+	GenConf GenConf `json:"gen,omitempty"`
+}
+
+func (c Conf) UseAutogen() bool {
+	return c.GenConf.Number > 0 || uint64(c.GenConf.Duration) > 0
 }
 
 // GenConf is configuration for the chat spam bot
@@ -72,7 +76,7 @@ func (g *GenConf) UnmarshalJSON(data []byte) error {
 
 // NewConf creates new client configuration
 func NewConf() (*Conf, error) {
-	c := &Conf{GenConf: &GenConf{}}
+	c := &Conf{GenConf: GenConf{}}
 	if cliConf.Conf != "" {
 		data, err := ioutil.ReadFile(cliConf.Conf)
 		if err != nil {

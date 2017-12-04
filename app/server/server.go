@@ -11,12 +11,11 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 type App struct {
 	hub  *Hub
-	conf *ServerConf
+	conf *Conf
 }
 
 // Run the application server
@@ -31,7 +30,7 @@ func (a *App) Run() error {
 	return nil
 }
 
-func NewApp(conf *ServerConf) *App {
+func NewApp(conf *Conf) *App {
 	return &App{
 		hub:  NewHub(),
 		conf: conf,

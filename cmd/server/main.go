@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	conf := server.NewServerConf()
+	conf := server.NewConf()
 	app := server.NewApp(conf)
 	if err := app.Run(); err != nil {
 		log.Fatalf(`fail: %s`, err)

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/gorilla/websocket"
@@ -32,6 +33,9 @@ type App struct {
 // connect to server
 func (a *App) connect() error {
 	url := a.conf.Host + "/ws"
+	if !strings.HasPrefix(url, "ws://") {
+		url = "ws://" + url
+	}
 	socket, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return errors.Wrap(err, `failed to connect to the server`)
@@ -57,12 +61,11 @@ func (a *App) disconnect() {
 
 // listen for incoming messages
 func (a *App) listen() {
-	log.Printf(`listen`)
 	for {
 		_, msg, err := a.socket.ReadMessage()
 		if err != nil {
 			log.Printf(`failed to read message from server: %s`, err)
-			a.hub.OnDisconnect()
+			// a.hub.OnDisconnect()
 			return
 		}
 		a.hub.OnServerMessage(msg)
@@ -71,12 +74,11 @@ func (a *App) listen() {
 
 // send message to server
 func (a *App) send() {
-	log.Printf(`send`)
 	for {
 		select {
 		case data, ok := <-a.hub.Outbound:
 			if !ok {
-				a.hub.OnDisconnect()
+				// a.hub.OnDisconnect()
 				return
 			}
 			a.socket.WriteMessage(websocket.TextMessage, data)
@@ -86,12 +88,11 @@ func (a *App) send() {
 
 // print incoming messages
 func (a *App) print() {
-	log.Printf(`print`)
 	for {
 		select {
 		case data, ok := <-a.hub.Inbound:
 			if !ok {
-				a.hub.OnDisconnect()
+				// a.hub.OnDisconnect()
 				return
 			}
 			if _, err := a.out.Write([]byte(data)); err != nil {
@@ -103,7 +104,6 @@ func (a *App) print() {
 
 // read user input
 func (a *App) read() {
-	log.Printf(`read`)
 	scanner := bufio.NewScanner(a.in)
 	for scanner.Scan() {
 		msg := scanner.Bytes()
@@ -129,7 +129,7 @@ func (a *App) Run() error {
 		return errors.Wrap(err, `failed to connect`)
 	}
 
-	// stop on interrupt
+	// stop on interruption
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
