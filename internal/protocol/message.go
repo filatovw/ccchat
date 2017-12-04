@@ -66,7 +66,14 @@ func ParseMessage(data []byte) (*Message, error) {
 	return nil, fmt.Errorf(`failed to parse message: %s`, inp)
 }
 
-// IsUserMessage check type of message
 func IsUserMessage(m *Message) bool {
 	return m.t == MESSAGE_CHAT
+}
+
+func IsAuthMessage(m *Message) bool {
+	return m.t == MESSAGE_AUTH
+}
+
+func IsEndMessage(m *Message) bool {
+	return m.t == MESSAGE_END
 }

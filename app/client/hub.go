@@ -1,9 +1,8 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/filatovw/ccchat/internal/protocol"
+	"github.com/pkg/errors"
 )
 
 // NewHub creates Hub
@@ -11,7 +10,7 @@ func NewHub(user string) *Hub {
 	return &Hub{
 		Outbound: make(chan []byte),
 		Inbound:  make(chan []byte),
-		Done:     make(chan struct{}),
+		Done:     make(chan []byte),
 		User:     user,
 	}
 }
@@ -20,7 +19,7 @@ func NewHub(user string) *Hub {
 type Hub struct {
 	Outbound chan []byte
 	Inbound  chan []byte
-	Done     chan struct{}
+	Done     chan []byte
 	User     string
 }
 
@@ -40,7 +39,7 @@ func (h Hub) OnServerMessage(d []byte) {
 func (h Hub) OnUserMessage(d []byte) error {
 	msg, err := protocol.ParseMessage(d)
 	if err != nil {
-		return fmt.Errorf(`failed to process user message: %s`, err)
+		return errors.Wrap(err, `failed to process user message`)
 	}
 	h.Outbound <- msg.Marshal()
 	return nil
@@ -62,6 +61,6 @@ func (h Hub) OnDisconnect() error {
 	if err != nil {
 		return err
 	}
-	h.Outbound <- msg.Marshal()
+	h.Done <- msg.Marshal()
 	return nil
 }

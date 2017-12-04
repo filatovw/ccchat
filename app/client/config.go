@@ -2,9 +2,10 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type ClientConf struct {
@@ -35,7 +36,7 @@ func (g *GenConf) UnmarshalJSON(data []byte) error {
 
 	ts, err := time.ParseDuration(cnf.Duration)
 	if err != nil {
-		return fmt.Errorf(`wrong duration format: "%s" %s`, cnf.Duration, err)
+		return errors.Wrapf(err, `wrong duration format: "%s"`, cnf.Duration)
 	}
 
 	g.Number = cnf.Number
@@ -50,10 +51,10 @@ func NewConf(conf, user, host string, genNumber uint, genUpperCase bool, genDura
 	if conf != "" {
 		data, err := ioutil.ReadFile(conf)
 		if err != nil {
-			return nil, fmt.Errorf(`failed to load config: %s`, err)
+			return nil, errors.Wrap(err, `failed to load config`)
 		}
 		if err := json.Unmarshal(data, c); err != nil {
-			return nil, fmt.Errorf(`failed to parse config: %s`, err)
+			return nil, errors.Wrap(err, `failed to parse config`)
 		}
 	}
 	if user != "" {
@@ -65,7 +66,7 @@ func NewConf(conf, user, host string, genNumber uint, genUpperCase bool, genDura
 	if genDuration != "" {
 		duration, err := time.ParseDuration(genDuration)
 		if err != nil {
-			return nil, fmt.Errorf(`failed to parse duration: %s`, err)
+			return nil, errors.Wrap(err, `failed to parse duration`)
 		}
 		c.GenConf.Duration = duration
 	}

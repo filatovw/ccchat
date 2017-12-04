@@ -2,7 +2,6 @@ package client
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 )
 
 func NewApp(conf *ClientConf, in io.Reader, out io.Writer) *App {
@@ -31,23 +31,38 @@ type App struct {
 
 // connect to server
 func (a *App) connect() error {
-	socket, _, err := websocket.DefaultDialer.Dial(a.conf.Host, nil)
+	url := a.conf.Host + "/ws"
+	socket, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
-		return fmt.Errorf(`failed to connect to the server: %s`, err)
+		return errors.Wrap(err, `failed to connect to the server`)
 	}
 	a.socket = socket
 	if err := a.hub.OnConnect(); err != nil {
-		return fmt.Errorf(`failed to connect to the server: %s`, err)
+		return errors.Wrap(err, `failed to send message on connect`)
 	}
 	return nil
 }
 
+func (a *App) disconnect() {
+	select {
+	case data, ok := <-a.hub.Done:
+		if !ok {
+			log.Printf(`read on closed Done channel`)
+			return
+		}
+		a.socket.WriteMessage(websocket.TextMessage, data)
+		a.socket.WriteMessage(websocket.CloseMessage, []byte{})
+	}
+}
+
 // listen for incoming messages
 func (a *App) listen() {
+	log.Printf(`listen`)
 	for {
 		_, msg, err := a.socket.ReadMessage()
 		if err != nil {
 			log.Printf(`failed to read message from server: %s`, err)
+			a.hub.OnDisconnect()
 			return
 		}
 		a.hub.OnServerMessage(msg)
@@ -56,44 +71,44 @@ func (a *App) listen() {
 
 // send message to server
 func (a *App) send() {
+	log.Printf(`send`)
 	for {
 		select {
 		case data, ok := <-a.hub.Outbound:
 			if !ok {
-				a.socket.WriteMessage(websocket.CloseMessage, []byte{})
+				a.hub.OnDisconnect()
 				return
 			}
 			a.socket.WriteMessage(websocket.TextMessage, data)
-		case <-a.hub.Done:
-			return
 		}
 	}
 }
 
 // print incoming messages
 func (a *App) print() {
+	log.Printf(`print`)
 	for {
 		select {
 		case data, ok := <-a.hub.Inbound:
 			if !ok {
+				a.hub.OnDisconnect()
 				return
 			}
-			_, err := a.out.Write(data)
-			log.Printf(`failed to write message: %s`, err)
-		case <-a.hub.Done:
-			return
+			if _, err := a.out.Write([]byte(data)); err != nil {
+				log.Printf(`failed to write message: %s`, err)
+			}
 		}
 	}
 }
 
 // read user input
 func (a *App) read() {
+	log.Printf(`read`)
 	scanner := bufio.NewScanner(a.in)
 	for scanner.Scan() {
-		a.out.Write([]byte("[key]::[message] >"))
-		if err := a.hub.OnUserMessage(scanner.Bytes()); err != nil {
+		msg := scanner.Bytes()
+		if err := a.hub.OnUserMessage(msg); err != nil {
 			log.Printf(`failed to read user message: %s`, err)
-			a.out.Write([]byte("failed to read message\r\n"))
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -103,20 +118,6 @@ func (a *App) read() {
 
 // Run client application
 func (a *App) Run() error {
-	if err := a.connect(); err != nil {
-		return fmt.Errorf(`failed to connect: %s`, err)
-	}
-	defer a.hub.Close()
-	// stop on interrupt
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigs
-		a.hub.Done <- struct{}{}
-	}()
-
-	// listen server
-	go a.listen()
 	// send messages to server
 	go a.send()
 	// print incoming messages
@@ -124,6 +125,23 @@ func (a *App) Run() error {
 	// read user input (or generate spam)
 	go a.read()
 
-	<-a.hub.Done
+	if err := a.connect(); err != nil {
+		return errors.Wrap(err, `failed to connect`)
+	}
+
+	// stop on interrupt
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	// listen server
+	go a.listen()
+
+	go func() {
+		<-sigs
+		a.hub.OnDisconnect()
+	}()
+
+	defer a.hub.Close()
+	a.disconnect()
 	return nil
 }
