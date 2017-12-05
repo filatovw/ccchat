@@ -1,4 +1,4 @@
-package server
+package model
 
 import (
 	"fmt"
@@ -9,14 +9,14 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `gorm:"unique_key"`
+	Name     string `gorm:"unique_index"`
 	Messages []Message
 }
 
 type Message struct {
 	gorm.Model
 	Body   string
-	UserID int `gorm:"index"`
+	UserID uint `gorm:"index"`
 }
 
 func InitDB(host, user, password, database string) (*gorm.DB, error) {

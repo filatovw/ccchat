@@ -2,6 +2,7 @@ package server
 
 import (
 	"flag"
+	"fmt"
 	"log"
 )
 
@@ -13,6 +14,11 @@ type Conf struct {
 	DBPass string `json:"dbpass"`
 	DBUser string `json:"dbuser"`
 	DBName string `json:"dbname"`
+}
+
+func (c Conf) String() string {
+	return fmt.Sprintf("%T\n host: %s\n db.host: %s\n db.pass: %s\n db.user: %s\n db.name: %s",
+		c, c.Host, c.DBHost, c.DBPass, c.DBUser, c.DBName)
 }
 
 func init() {
@@ -27,7 +33,6 @@ func init() {
 func NewConf() *Conf {
 	conf := &Conf{}
 	conf.Host = "0.0.0.0:9000"
-	log.Printf(`cliconf %+v`, cliConf)
 
 	if cliConf.Host != "" {
 		conf.Host = cliConf.Host
@@ -44,6 +49,6 @@ func NewConf() *Conf {
 	if cliConf.DBName != "" {
 		conf.DBName = cliConf.DBName
 	}
-	log.Printf(`new server config: %+v`, conf)
+	log.Printf(`new server config: %s`, conf)
 	return conf
 }

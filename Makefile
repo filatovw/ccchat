@@ -1,12 +1,20 @@
-.PHONY: build clean install test
+.PHONY: build build-linux clean install test
 
-build:
+all: ensure install test
+
+build: gobindata
 	go build -o ./bin/local/client ./cmd/client/
+	go get -u github.com/jteeuwen/go-bindata/
+	go-bindata -o ./app/server/bindata.go -pkg server ./app/server/static/...
 	go build -o ./bin/local/server ./cmd/server/
 
-build-linux:
+build-linux: gobindata
 	CGO_ENABLED=0 GOOS=linux go build -o ./bin/linux/client ./cmd/client/
+	go-bindata -o ./app/server/bindata.go -pkg server ./app/server/static/...
 	CGO_ENABLED=0 GOOS=linux go build -o ./bin/linux/server ./cmd/server/
+
+ensure:
+	dep ensure
 
 install:
 	go install ./...
@@ -24,3 +32,6 @@ docker-start:
 .PHONY:docker-stop
 docker-stop:
 	docker-compose down
+
+gobindata:
+	go get -u github.com/jteeuwen/go-bindata/...

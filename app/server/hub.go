@@ -3,7 +3,9 @@ package server
 import (
 	"log"
 
+	"github.com/filatovw/ccchat/app/server/model"
 	"github.com/filatovw/ccchat/internal/protocol"
+	"github.com/jinzhu/gorm"
 )
 
 func NewHub() *Hub {
@@ -18,8 +20,12 @@ type Hub struct {
 	clients    ClientsMap
 	register   chan *Client
 	unregister chan *Client
+	db         *gorm.DB
 }
 
+func (hub *Hub) setDB(db *gorm.DB) {
+	hub.db = db
+}
 func (hub *Hub) addClient(c *Client) {
 	hub.register <- c
 }
@@ -35,10 +41,14 @@ func (hub *Hub) run() {
 	}
 }
 
+func (hub *Hub) send(msg []byte, c *Client) {
+	c.outbound <- msg
+}
+
 func (hub *Hub) broadcast(msg protocol.Messager, ignore *Client) {
 	for _, c := range hub.clients.data {
 		if c.id != ignore.id {
-			c.outbound <- msg.Marshal()
+			hub.send(msg.Marshal(), c)
 		}
 	}
 }
@@ -59,12 +69,28 @@ func (hub *Hub) onMessage(data []byte, c *Client) {
 	if err != nil {
 		log.Printf(`failed to parse message: %v`, msg)
 	}
+
 	log.Printf(`%s: %s`, c.name, string(msg.Marshal()))
-	hub.broadcast(msg, c)
+
 	if m, ok := msg.(*protocol.AuthMessage); ok {
 		c.name = m.Name()
+		if _, err := model.GetOrCreateUser(hub.db, c.name); err != nil {
+			log.Printf(`%s`, err)
+		}
+
 		hub.clients.Add(c)
 	} else if _, ok := msg.(*protocol.EndMessage); ok {
 		hub.unregister <- c
 	}
+	hub.broadcast(msg, c)
+
+	user, err := model.GetOrCreateUser(hub.db, c.name)
+	if err != nil {
+		log.Printf(`%s`, err)
+	}
+	err = model.AddMessage(hub.db, user, string(msg.Marshal()))
+	if err != nil {
+		log.Printf(`%s`, err)
+	}
+
 }

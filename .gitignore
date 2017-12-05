@@ -16,3 +16,5 @@
 bin/*
 .vscode
 data/
+vendor/
+bindata.go

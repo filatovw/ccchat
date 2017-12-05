@@ -18,6 +18,7 @@ type Spammer struct {
 	counter uint
 }
 
+// NewSpammer creates generator of random phrases
 func NewSpammer(d time.Duration, up bool, num uint, delay time.Duration) *Spammer {
 	s := &Spammer{uppercase: up, num: num, delay: delay}
 	if int(d) > 0 {
@@ -33,17 +34,15 @@ func (s *Spammer) gen() []byte {
 		g = bytes.ToUpper(g)
 	}
 	s.counter++
-
 	t := time.NewTimer(s.delay)
 	<-t.C
 	return g
 }
 
 func (s *Spammer) Read(p []byte) (int, error) {
-	if s.counter >= s.num {
+	if s.num != 0 && s.counter >= s.num {
 		return 0, io.EOF
 	}
-
 	if s.duration != nil {
 		select {
 		case <-s.duration.C:

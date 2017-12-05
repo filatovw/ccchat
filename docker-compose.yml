@@ -6,10 +6,11 @@ services:
     depends_on:
       - db
     volumes:
+      - ./app/server/static/:/static/
       - ./bin/linux/server:/server
     ports:
       - 9000:9000
-    command: /server -host 0.0.0.0:9000 -dbhost db -dbpass dbpasswd -dbuser dbuser -dbname ccchat
+    command: /server -host 0.0.0.0:9000 -dbhost db -dbpass dbpasswd -dbuser dbuser -dbname ccchat 2>&1
 
   client1:
     image: alpine:latest
@@ -19,7 +20,7 @@ services:
     volumes:
       - ./bin/linux/client:/client
       - ./configs:/conf
-    command: /client -host server:9000 -user client1 -gen.number 100
+    command: /client -host server:9000 -user client1 -gen.number 100 2>&1
 
   client2:
     image: alpine:latest
@@ -29,7 +30,7 @@ services:
     volumes:
       - ./bin/linux/client:/client
       - ./configs:/conf
-    command: /client -host server:9000 -user client2 -gen.duration 2m -gen.uppercase true
+    command: /client -host server:9000 -user client2 -gen.duration 2m -gen.uppercase true 2>&1
   
   db:
     image: postgres:10.1
