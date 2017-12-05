@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -15,12 +16,21 @@ var upgrader = websocket.Upgrader{
 
 type App struct {
 	hub  *Hub
+	db   *gorm.DB
 	conf *Conf
 }
 
 // Run the application server
 func (a *App) Run() error {
+	dbconn, err := InitDB(a.conf.DBHost, a.conf.DBUser, a.conf.DBPass, a.conf.DBName)
+	if err != nil {
+		return errors.Wrap(err, "failed to establish new connection to database")
+	}
+	a.db = dbconn
+	defer a.db.Close()
+
 	go a.hub.run()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", a.RootHandler)
 	mux.HandleFunc("/ws", a.WSHandler)

@@ -5,33 +5,41 @@ services:
     depends_on:
       - db
     volumes:
-      - ./bin/server:/app
-    command: /app -host=0.0.0.0:9000 -db-host=db:5432 -db-pass=passwd
+      - ./bin/linux/server:/server
+    ports:
+      - 9000:9000
+    command: /server -host 0.0.0.0:9000 -dbhost db -dbpass dbpasswd -dbuser dbuser -dbname ccchat
 
   client1:
     image: alpine:latest
     depends_on:
       - server
     volumes:
-      - ./bin/client:/app
+      - ./bin/linux/client:/client
       - ./configs:/conf
-    command: /app -host=ws://server:9000 -user=client1
+    command: /client -host server:9000 -user client1 -gen.number 100
 
   client2:
     image: alpine:latest
     depends_on:
       - server
     volumes:
-      - ./bin/client:/app
+      - ./bin/linux/client:/client
       - ./configs:/conf
-    command: /app -host=ws://server:9000 -user=client2
+    command: /client -host server:9000 -user client2 -gen.duration 2m -gen.uppercase true
   
   db:
     image: postgres:10.1
+    restart: always
     environment:
       POSTGRES_PASSWORD: dbpasswd
       POSTGRES_USER: dbuser
       POSTGRES_DB: ccchat
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+      - 5433:5433
 
   adminer:
     image: adminer

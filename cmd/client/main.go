@@ -11,12 +11,13 @@ import (
 )
 
 func main() {
+	// assemble config from the file and CLI arguments
 	conf, err := client.NewConf()
 	if err != nil {
 		log.Fatalf(`failed on configuration: %v`, err)
 	}
 
-	log.Printf("%+v", conf)
+	// set auto-generator
 	var inp io.Reader
 	inp = os.Stdin
 	if conf.UseAutogen() {
@@ -24,10 +25,12 @@ func main() {
 			conf.GenConf.Duration, conf.GenConf.UpperCase, conf.GenConf.Number, time.Millisecond*300)
 	}
 
+	// create client app
 	app, err := client.NewApp(conf, inp, os.Stdout)
 	if err != nil {
 		log.Fatalf("failed on init:\n%v\n", err)
 	}
+	// start client app
 	if err := app.Run(); err != nil {
 		log.Fatalf("failed on run:\n%v\n", err)
 	}
