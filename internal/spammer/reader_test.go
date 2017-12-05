@@ -9,7 +9,7 @@ import (
 )
 
 func TestSpammerNumber(t *testing.T) {
-	spammer := NewSpammer(time.Second, false, 1)
+	spammer := NewSpammer(time.Second, false, 1, time.Nanosecond)
 	p := make([]byte, 10, 10)
 	size, err := spammer.Read(p)
 	assert.NoError(t, err)
@@ -31,7 +31,7 @@ func TestSpammerUppercase(t *testing.T) {
 		return true
 	}
 
-	spammer := NewSpammer(time.Second, true, 1)
+	spammer := NewSpammer(time.Second, true, 1, time.Nanosecond)
 	p := make([]byte, 10, 10)
 	size, err := spammer.Read(p)
 	assert.NoError(t, err)
@@ -45,7 +45,7 @@ func TestSpammerUppercase(t *testing.T) {
 }
 
 func TestSpammerTimeout(t *testing.T) {
-	spammer := NewSpammer(time.Nanosecond, false, 1)
+	spammer := NewSpammer(time.Nanosecond, false, 1, time.Nanosecond)
 	p := make([]byte, 10, 10)
 	size, err := spammer.Read(p)
 	assert.NoError(t, err)
