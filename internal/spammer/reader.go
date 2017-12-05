@@ -26,26 +26,32 @@ func NewSpammer(d time.Duration, up bool, num uint, delay time.Duration) *Spamme
 	return s
 }
 
-func (s Spammer) gen() []byte {
-	return []byte(randomdata.SillyName())
+func (s *Spammer) gen() []byte {
+	msg, _ := protocol.NewUserMessage(randomdata.Noun(), randomdata.Adjective())
+	g := msg.Marshal()
+	if s.uppercase {
+		g = bytes.ToUpper(g)
+	}
+	s.counter++
+
+	t := time.NewTimer(s.delay)
+	<-t.C
+	return g
 }
 
 func (s *Spammer) Read(p []byte) (int, error) {
 	if s.counter >= s.num {
 		return 0, io.EOF
 	}
-	select {
-	case <-s.duration.C:
-		return 0, io.EOF
-	default:
-		msg, _ := protocol.NewUserMessage(randomdata.Noun(), randomdata.Adjective())
-		g := msg.Marshal()
-		if s.uppercase {
-			g = bytes.ToUpper(p)
+
+	if s.duration != nil {
+		select {
+		case <-s.duration.C:
+			return 0, io.EOF
+		default:
 		}
-		copy(p, g)
-		s.counter++
-		time.Sleep(s.delay)
-		return len(g), nil
 	}
+	g := s.gen()
+	copy(p, g)
+	return len(g), nil
 }

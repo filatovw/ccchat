@@ -2,6 +2,7 @@ version: '3.2'
 services:
   server:
     image: alpine:latest
+    restart: unless-stopped
     depends_on:
       - db
     volumes:
@@ -12,6 +13,7 @@ services:
 
   client1:
     image: alpine:latest
+    restart: unless-stopped
     depends_on:
       - server
     volumes:
@@ -21,6 +23,7 @@ services:
 
   client2:
     image: alpine:latest
+    restart: unless-stopped
     depends_on:
       - server
     volumes:
