@@ -1,39 +1,59 @@
 <html>
     <head>
-        <script type="text/javascript">
-            function wsinit(){
-                var ws = new WebSocket("ws://0.0.0.0:9000/ws");
-                var stream = document.getElementById("message-stream")
-                ws.onopen = function(e) {
-                    console.log("connection opened")
-                }
-                ws.onmessage = function (e) {
-                    stream.value = stream.value + "\n" + e.data
-                };
-                ws.onerror = function() {
-                    console.log("failed to connect over websocket")
-                }
-                ws.onclose = function(e){
-                    if (e.wasClean) {
-                        console.log("closed correctly")
-                      } else {
-                        console.log("broken connection")
-                      }
-                      console.log("code: "+ e.code + " reason: " + e.reason)
-                };
-            }
-        </script>
         <title>
             ccchat
         </title>
     </head>
     <body>
         <h1>welcome to c-c-chat for stutterers</h1>
-        <button onclick="javascript:wsinit()">start</button>
-        <textarea style="min-height:600px; height:90%; width:98%;" id="message-stream">
-            {{range .}}
-                {{- . }}
-            {{- end}}
-        </textarea>
+        <div>
+            <div class="nav-bar" id="starter"><button onclick="javascript:wsinit()">start</button></div>
+            <div class="nav-bar"><div>number of active users:</div><div id="users-number"></div></div>
+            <div class="nav-bar"><div id="users"></div></div>
+        </div>
+        <div id="messages">
+{{- range . }}
+<div class="message">{{ . }}</div>
+{{- end }}
+        </div>
     </body>
 </html>
+
+
+<style type="text/css">
+#messages{
+    min-height: 600px;
+    height: 90%;
+    width: 98%;
+}
+.message{
+   border-bottom-width: 1px; 
+}
+</style>
+
+<script type="text/javascript">
+    function wsinit(){
+        var ws = new WebSocket("ws://0.0.0.0:9000/ws");
+        var stream = document.getElementById("messages")
+        var started = document.getElementById("starter")
+        started.setAttribute("disabled", "true")
+
+        ws.onopen = function(e) {
+            console.log("connection opened")
+        }
+        ws.onmessage = function (e) {
+            stream.value = stream.value + '<div class="message">' + e.data + '</div>'
+        };
+        ws.onerror = function() {
+            console.log("failed to connect over websocket")
+        }
+        ws.onclose = function(e){
+            if (e.wasClean) {
+                console.log("closed correctly")
+                } else {
+                console.log("broken connection")
+                }
+                console.log("code: "+ e.code + " reason: " + e.reason)
+        };
+    }
+</script>

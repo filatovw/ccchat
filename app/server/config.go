@@ -17,7 +17,7 @@ type Conf struct {
 }
 
 func (c Conf) String() string {
-	return fmt.Sprintf("%T\n host: %s\n db.host: %s\n db.pass: %s\n db.user: %s\n db.name: %s",
+	return fmt.Sprintf("%T\n=====\n host: %s\n db.host: %s\n db.pass: %s\n db.user: %s\n db.name: %s\n=====",
 		c, c.Host, c.DBHost, c.DBPass, c.DBUser, c.DBName)
 }
 

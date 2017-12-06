@@ -20,6 +20,7 @@ func marshal(command, message string) []byte {
 
 type Messager interface {
 	Marshal() []byte
+	MarshalServer(string) []byte
 }
 
 type AuthMessage struct {
@@ -33,6 +34,10 @@ func (m AuthMessage) Name() string {
 
 func (m AuthMessage) Marshal() []byte {
 	return marshal(m.commandCode, m.message)
+}
+
+func (m AuthMessage) MarshalServer(name string) []byte {
+	return []byte(fmt.Sprintf(`[%s] %s`, name, m.commandCode))
 }
 
 // NewAuthMessage returns message that should be first in session
@@ -53,6 +58,10 @@ func (m UserMessage) Marshal() []byte {
 	return marshal(m.commandCode, m.message)
 }
 
+func (m UserMessage) MarshalServer(name string) []byte {
+	return []byte(fmt.Sprintf(`[%s] %s | %s`, name, m.commandCode, m.message))
+}
+
 // NewUserMessage returns user message
 func NewUserMessage(key, body string) (Messager, error) {
 	return &UserMessage{commandCode: key, message: body}, nil
@@ -64,6 +73,10 @@ type EndMessage struct {
 
 func (m EndMessage) Marshal() []byte {
 	return []byte(m.commandCode)
+}
+
+func (m EndMessage) MarshalServer(name string) []byte {
+	return []byte(fmt.Sprintf(`[%s] %s`, name, m.commandCode))
 }
 
 // NewEndMessage returns message that should be latest in session

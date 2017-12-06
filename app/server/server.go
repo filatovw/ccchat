@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/filatovw/ccchat/app/server/model"
+	"github.com/filatovw/ccchat/internal/protocol"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
@@ -74,14 +75,22 @@ func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {
 	// collect messages for a day
 	yesterday := time.Now().AddDate(0, 0, -1)
 	messages, err := model.MessagesSinceDate(a.hub.db, yesterday)
-	_ = messages
 	if err != nil {
 		log.Printf(`failed to get messages: %s`, err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 
-	err = t.Execute(w, messages)
+	messagesT := []string{}
+	for _, m := range messages {
+		msg, err := protocol.ParseMessage([]byte(m.Body))
+		if err != nil {
+			log.Printf("%s", err)
+		}
+		messagesT = append(messagesT, string(msg.MarshalServer(string(m.UserID))))
+	}
+
+	err = t.Execute(w, messagesT)
 	if err != nil {
 		log.Printf(`failed to render template: %s`, err)
 		http.Error(w, "server error", http.StatusInternalServerError)
