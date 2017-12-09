@@ -42,6 +42,7 @@
             console.log("connection opened")
         }
         ws.onmessage = function (e) {
+            console.log(e.data)
             stream.value = stream.value + '<div class="message">' + e.data + '</div>'
         };
         ws.onerror = function() {

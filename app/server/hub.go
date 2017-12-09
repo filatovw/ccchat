@@ -83,6 +83,7 @@ func (hub *Hub) onMessage(data []byte, c *Client) {
 		hub.unregister <- c
 	}
 
+	log.Printf("%s", msg.MarshalServer(c.name))
 	hub.broadcast(msg.MarshalServer(c.name), c)
 
 	user, err := model.GetOrCreateUser(hub.db, c.name)

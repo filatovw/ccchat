@@ -95,9 +95,10 @@ func (a *App) print() {
 				// a.hub.OnDisconnect()
 				return
 			}
-			if _, err := a.out.Write([]byte(data)); err != nil {
+			if _, err := a.out.Write(data); err != nil {
 				log.Printf(`failed to write message: %s`, err)
 			}
+			a.out.Write([]byte("\n"))
 		}
 	}
 }
