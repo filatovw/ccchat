@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -20,8 +21,9 @@ type Message struct {
 }
 
 type UserMessage struct {
-	UserName string
-	Body     string
+	UserName         string
+	MessageCreatedAt time.Time
+	MessageBody      string
 }
 
 func InitDB(host, user, password, database string) (*gorm.DB, error) {

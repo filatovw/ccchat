@@ -83,11 +83,11 @@ func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {
 
 	messagesT := []string{}
 	for _, m := range messages {
-		msg, err := protocol.ParseMessage([]byte(m.Body))
+		msg, err := protocol.ParseMessage([]byte(m.MessageBody))
 		if err != nil {
 			log.Printf("%s", err)
 		}
-		messagesT = append(messagesT, string(msg.MarshalServer(string(m.UserID))))
+		messagesT = append(messagesT, string(msg.MarshalServer(m.UserName)))
 	}
 
 	err = t.Execute(w, messagesT)
