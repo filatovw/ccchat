@@ -57,7 +57,7 @@ func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	index, err := Asset("app/server/static/index.html")
+	index, err := Asset("app/server/static/html/index.html")
 	if err != nil {
 		log.Printf(`failed to load template from bindata: %s`, err)
 		http.Error(w, "page not found", http.StatusNotFound)
