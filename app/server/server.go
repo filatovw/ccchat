@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/filatovw/ccchat/app/server/model"
@@ -34,6 +35,7 @@ func (a *App) Run() error {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", a.RootHandler)
+	mux.HandleFunc("/static/", a.StaticHandler)
 	mux.HandleFunc("/ws", a.WSHandler)
 	if err := http.ListenAndServe(a.conf.Host, mux); err != nil {
 		return errors.Wrap(err, `server failed to start`)
@@ -46,6 +48,27 @@ func NewApp(conf *Conf) *App {
 		hub:  NewHub(),
 		conf: conf,
 	}
+}
+
+func (a App) StaticHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("StaticHandler: %s", r.URL.Path)
+	if !strings.HasPrefix(r.URL.Path, "/static") {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	data, err := Asset(strings.Join([]string{"app/server", r.URL.Path}, ""))
+	if err != nil {
+		log.Printf(`failed to get file from bindata: %s`, err)
+		http.Error(w, "page not found", http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
 }
 
 func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {
