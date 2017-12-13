@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <script src="/static/js/ccchat.js"></script>
+        <link rel="/static/css/styles.css" type="text/css" />
+        <title>
+            ccchat
+        </title>
+    </head>
+    <body>
+        <h1>welcome to c-c-chat for stutterers</h1>
+        <div>
+            <div class="nav-bar"><div>number of active users:</div><div id="users-number"></div></div>
+            <div class="nav-bar"><div id="users"></div></div>
+        </div>
+        <div id="messages">
+{{- range . }}
+<div class="message">{{ . }}</div>
+{{- end }}
+        </div>
+    </body>
+</html>

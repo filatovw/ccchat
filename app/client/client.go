@@ -119,16 +119,15 @@ func (a *App) read() {
 
 // Run client application
 func (a *App) Run() error {
+	if err := a.connect(); err != nil {
+		return errors.Wrap(err, `failed to connect`)
+	}
 	// send messages to server
 	go a.send()
 	// print incoming messages
 	go a.print()
 	// read user input (or generate spam)
 	go a.read()
-
-	if err := a.connect(); err != nil {
-		return errors.Wrap(err, `failed to connect`)
-	}
 
 	// stop on interruption
 	sigs := make(chan os.Signal, 1)
