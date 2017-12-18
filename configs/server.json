@@ -1,0 +1,9 @@
+{
+    "host": "0.0.0.0:9000",
+    "db": {
+        "host": "0.0.0.0",
+        "user": "dbuser",
+        "password": "dbpasswd",
+        "name": "ccchat"
+    }
+}

@@ -1,0 +1,7 @@
+body{
+    background-color: black;
+    color: #acacac;
+}
+#messages, #info {
+    background-color: #ffa65e;
+}

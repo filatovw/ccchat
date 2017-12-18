@@ -4,7 +4,7 @@ all: ensure install test
 
 build: gobindata
 	go build -o ./bin/local/client ./cmd/client/
-	go-bindata -o ./app/server/bindata.go -pkg server ./app/server/static/...
+	go-bindata -debug -o ./app/server/bindata.go -pkg server ./app/server/static/...
 	go build -o ./bin/local/server ./cmd/server/
 
 build-linux: gobindata
@@ -22,6 +22,7 @@ test:
 	go test ./...
 
 clean: docker-stop
+	rm -f app/server/bindata.go
 	rm -rf bin/*
 
 .PHONY:docker-start

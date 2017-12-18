@@ -66,9 +66,23 @@ func (a App) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "page not found", http.StatusNotFound)
 		return
 	}
+	splitted := strings.Split(r.URL.Path, ".")
+	var contentType string
+	if len(splitted) > 1 {
+		switch splitted[len(splitted)-1]{
+		case "js":
+			contentType = "application/json"
+		case "css":
+			contentType = "text/css"
+		default:
+			contentType = "text/plain"
+		}
+	} else {
+		contentType = "text/plain"
+	}
+	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
-	return
 }
 
 func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {

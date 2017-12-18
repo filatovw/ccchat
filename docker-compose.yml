@@ -10,7 +10,7 @@ services:
       - ./bin/linux/server:/server
     ports:
       - 9000:9000
-    command: /server -host 0.0.0.0:9000 -dbhost db -dbpass dbpasswd -dbuser dbuser -dbname ccchat 2>&1
+    command: /server -host 0.0.0.0:9000 -db.host db -db.pass dbpasswd -db.user dbuser -db.name ccchat 2>&1
 
   client1:
     image: alpine:latest
