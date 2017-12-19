@@ -9,7 +9,11 @@ import (
 
 func main() {
 	// create config from CLI arguments
-	conf := server.NewConf()
+	conf, err := server.NewConf()
+	if err != nil {
+		log.Fatalf(`failed on configuration: %v`, err)
+	}
+
 	// create server app
 	app := server.NewApp(conf)
 	// start app

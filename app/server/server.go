@@ -18,6 +18,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// App is a server application
 type App struct {
 	hub  *Hub
 	conf *Conf
@@ -25,7 +26,7 @@ type App struct {
 
 // Run the application server
 func (a *App) Run() error {
-	dbconn, err := model.InitDB(a.conf.DBHost, a.conf.DBUser, a.conf.DBPass, a.conf.DBName)
+	dbconn, err := model.InitDB(a.conf.DB.Host, a.conf.DB.User, a.conf.DB.Pass, a.conf.DB.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to establish new connection to database")
 	}
@@ -43,6 +44,7 @@ func (a *App) Run() error {
 	return nil
 }
 
+// NewApp create App instance
 func NewApp(conf *Conf) *App {
 	return &App{
 		hub:  NewHub(),
@@ -50,6 +52,7 @@ func NewApp(conf *Conf) *App {
 	}
 }
 
+// StaticHandler serve static files like *.css or *.js
 func (a App) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("StaticHandler: %s", r.URL.Path)
 	if !strings.HasPrefix(r.URL.Path, "/static") {
@@ -85,6 +88,7 @@ func (a App) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+// RootHandler index page
 func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -134,6 +138,8 @@ func (a App) RootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+// WSHandler websocket handler
 func (a App) WSHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

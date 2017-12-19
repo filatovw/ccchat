@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// NewHub create Hub instance
 func NewHub() *Hub {
 	return &Hub{
 		clients:    NewClientsMap(),
@@ -16,6 +17,7 @@ func NewHub() *Hub {
 	}
 }
 
+// Hub is a logic core of server application
 type Hub struct {
 	clients    ClientsMap
 	register   chan *Client

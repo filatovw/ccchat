@@ -5,6 +5,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+// Client represents one real client
 type Client struct {
 	id       string
 	name     string
@@ -28,9 +29,14 @@ func newClient(hub *Hub, socket *websocket.Conn) *Client {
 }
 
 func (client *Client) read() {
+	var (
+		err  error
+		data []byte
+	)
 	for {
-		_, data, err := client.socket.ReadMessage()
+		_, data, err = client.socket.ReadMessage()
 		if err != nil {
+			client.hub.onDisconnect(client)
 			break
 		}
 		client.hub.onMessage(data, client)
@@ -38,15 +44,23 @@ func (client *Client) read() {
 }
 
 func (client *Client) write() {
+	var (
+		err  error
+		data []byte
+		ok   bool
+	)
 	for {
 		select {
-		case data, ok := <-client.outbound:
+		case data, ok = <-client.outbound:
 			if !ok {
 				client.socket.WriteMessage(websocket.CloseMessage, []byte{})
 				client.socket.Close()
 				return
 			}
-			client.socket.WriteMessage(websocket.TextMessage, data)
+			if err = client.socket.WriteMessage(websocket.TextMessage, data); err != nil {
+				client.hub.onDisconnect(client)
+				break
+			}
 		}
 	}
 }
